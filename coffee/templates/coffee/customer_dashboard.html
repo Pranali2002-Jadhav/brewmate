@@ -1,0 +1,195 @@
+{% extends 'coffee/base.html' %}
+{% block title %}My Dashboard{% endblock %}
+{% block content %}
+
+<div class="page-hero">
+  <div class="container">
+    <h1><i class="fa fa-home me-2"></i>Welcome, {{ user.first_name }}! ☕</h1>
+    <p class="mb-0 mt-1" style="color:#ccc">Here's everything in your BrewMate account</p>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row g-4">
+
+    <!-- Stats -->
+    <div class="col-12">
+      <div class="row g-3">
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-label"><i class="fa fa-receipt me-1"></i> Total Orders</div>
+            <div class="stat-value">{{ orders|length }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card" style="border-color:#28a745">
+            <div class="stat-label"><i class="fa fa-star me-1"></i> Loyalty Points</div>
+            <div class="stat-value" style="color:var(--brew-gold)">{{ loyalty.points|default:"0" }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card" style="border-color:#17a2b8">
+            <div class="stat-label"><i class="fa fa-calendar me-1"></i> Reservations</div>
+            <div class="stat-value">{{ reservations|length }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card" style="border-color:#6f42c1">
+            <div class="stat-label"><i class="fa fa-gift me-1"></i> Redeemable</div>
+            <div class="stat-value" style="font-size:1.3rem">₹{{ loyalty.redeem_value|default:"0" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-12">
+      <div class="section-title">Quick Actions</div>
+      <div class="row g-3">
+        {% for label, icon, url, color in quick_actions|default:"" %}{% endfor %}
+        <div class="col-6 col-md-3">
+          <a href="{% url 'menu' %}" class="card text-center p-3 text-decoration-none h-100" style="border-top:3px solid var(--brew-gold)">
+            <div style="font-size:2rem">☕</div>
+            <div class="fw-600 small mt-1">Order Coffee</div>
+          </a>
+        </div>
+        <div class="col-6 col-md-3">
+          <a href="{% url 'cart' %}" class="card text-center p-3 text-decoration-none h-100" style="border-top:3px solid #28a745">
+            <div style="font-size:2rem">🛒</div>
+            <div class="fw-600 small mt-1">View Cart</div>
+          </a>
+        </div>
+        <div class="col-6 col-md-3">
+          <a href="{% url 'reservation' %}" class="card text-center p-3 text-decoration-none h-100" style="border-top:3px solid #17a2b8">
+            <div style="font-size:2rem">📅</div>
+            <div class="fw-600 small mt-1">Reserve Table</div>
+          </a>
+        </div>
+        <div class="col-6 col-md-3">
+          <a href="{% url 'loyalty' %}" class="card text-center p-3 text-decoration-none h-100" style="border-top:3px solid #6f42c1">
+            <div style="font-size:2rem">⭐</div>
+            <div class="fw-600 small mt-1">Loyalty Points</div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loyalty Card -->
+    {% if loyalty %}
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-header-brew"><i class="fa fa-star me-2"></i>Loyalty Status</div>
+        <div class="card-body text-center p-4">
+          <div style="font-size:3rem;font-weight:800;color:var(--brew-gold)">{{ loyalty.points }}</div>
+          <div class="text-muted small mb-3">points balance</div>
+          <div class="progress mb-2" style="height:10px;border-radius:5px">
+            <div class="progress-bar" style="background:var(--brew-gold);width:{% widthratio loyalty.points 100 100 %}%;border-radius:5px"></div>
+          </div>
+          <div class="small text-muted d-flex justify-content-between">
+            <span>{{ loyalty.points }} pts</span><span>100 pts = Free coffee</span>
+          </div>
+          {% if loyalty.can_redeem %}
+          <div class="alert mt-3 mb-0 py-2" style="background:#fff3cd;color:#856404;border:none;border-radius:8px">
+            🎉 You can redeem! Use at checkout.
+          </div>
+          {% else %}
+          <div class="small text-muted mt-3">{{ loyalty.points|add:"-100"|add:"100"|add:"-"|stringformat:"s" }} more pts for a free coffee</div>
+          {% endif %}
+          <a href="{% url 'loyalty' %}" class="btn btn-brew btn-sm w-100 mt-3">View Details →</a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Orders -->
+    <div class="col-md-8">
+      <div class="card h-100">
+        <div class="card-header-brew d-flex justify-content-between align-items-center">
+          <span><i class="fa fa-receipt me-2"></i>Recent Orders</span>
+          <a href="{% url 'my_orders' %}" class="btn btn-sm" style="background:rgba(255,255,255,.1);color:var(--brew-gold);font-size:.8rem">View All</a>
+        </div>
+        <div class="card-body p-0">
+          {% if orders %}
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead>
+                <tr>
+                  <th>Order #</th><th>Items</th><th>Total</th><th>Status</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for order in orders %}
+                <tr>
+                  <td><strong>{{ order.order_number }}</strong></td>
+                  <td class="small text-muted">{{ order.items.count }} item{{ order.items.count|pluralize }}</td>
+                  <td><strong>₹{{ order.total }}</strong></td>
+                  <td><span class="badge badge-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                  <td><a href="{% url 'order_detail' order.pk %}" class="btn btn-sm btn-brew-outline">Track</a></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center p-5 text-muted">
+            <div style="font-size:3rem">📋</div>
+            <p class="mt-2">No orders yet.</p>
+            <a href="{% url 'menu' %}" class="btn btn-brew btn-sm">Order Now</a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming Reservations -->
+    {% if reservations %}
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header-brew"><i class="fa fa-calendar me-2"></i>Upcoming Reservations</div>
+        <div class="card-body">
+          <div class="row g-3">
+            {% for res in reservations %}
+            <div class="col-md-4">
+              <div class="p-3 rounded" style="background:#f8f4ed;border-left:4px solid var(--brew-gold)">
+                <div class="fw-700 small" style="color:var(--brew-gold);font-family:monospace;font-size:1.1rem">{{ res.confirmation_code }}</div>
+                <div class="small mt-1"><i class="fa fa-calendar me-1"></i>{{ res.date|date:"D, d M Y" }}</div>
+                <div class="small"><i class="fa fa-clock me-1"></i>{{ res.time_slot|time:"g:i A" }}</div>
+                <div class="small"><i class="fa fa-users me-1"></i>{{ res.guests }} guest{{ res.guests|pluralize }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Notifications -->
+    {% if notifs %}
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header-brew d-flex justify-content-between align-items-center">
+          <span><i class="fa fa-bell me-2"></i>Recent Notifications</span>
+          <a href="{% url 'notifications' %}" class="btn btn-sm" style="background:rgba(255,255,255,.1);color:var(--brew-gold);font-size:.8rem">View All</a>
+        </div>
+        <div class="card-body">
+          {% for notif in notifs %}
+          <div class="d-flex gap-3 py-2 {% if not forloop.last %}border-bottom{% endif %}">
+            <div style="width:36px;height:36px;background:var(--brew-light);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              {% if notif.notif_type == 'order' %}🛍️{% elif notif.notif_type == 'loyalty' %}⭐{% else %}📢{% endif %}
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-600 small">{{ notif.title }}</div>
+              <div class="text-muted small">{{ notif.message|truncatechars:80 }}</div>
+            </div>
+            <div class="text-muted" style="font-size:.75rem;white-space:nowrap">{{ notif.created_at|timesince }} ago</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

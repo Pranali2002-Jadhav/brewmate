@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}BrewMate{% endblock %} | Coffee Shop</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --brew-dark:   #1a0a00;
+      --brew-brown:  #4a2512;
+      --brew-medium: #7b3f00;
+      --brew-gold:   #c8860a;
+      --brew-light:  #f5e6d3;
+      --brew-cream:  #fdf8f2;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--brew-cream); color: var(--brew-dark); font-family: 'Segoe UI', sans-serif; }
+
+    /* Navbar */
+    .navbar { background: var(--brew-dark) !important; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+    .navbar-brand { color: var(--brew-gold) !important; font-weight: 800; font-size: 1.5rem; }
+    .navbar-brand span { color: #fff; }
+    .nav-link { color: #ccc !important; transition: color .2s; }
+    .nav-link:hover, .nav-link.active { color: var(--brew-gold) !important; }
+    .navbar-toggler-icon { filter: invert(1); }
+    .badge-cart { background: var(--brew-gold); color: var(--brew-dark); font-size: .65rem; border-radius: 50%; padding: 2px 6px; }
+
+    /* Buttons */
+    .btn-brew { background: var(--brew-gold); color: var(--brew-dark); border: none; font-weight: 600; }
+    .btn-brew:hover { background: var(--brew-medium); color: #fff; }
+    .btn-brew-dark { background: var(--brew-dark); color: var(--brew-gold); border: none; font-weight: 600; }
+    .btn-brew-dark:hover { background: var(--brew-brown); color: #fff; }
+    .btn-brew-outline { background: transparent; border: 2px solid var(--brew-gold); color: var(--brew-gold); font-weight: 600; }
+    .btn-brew-outline:hover { background: var(--brew-gold); color: var(--brew-dark); }
+
+    /* Cards */
+    .card { border: none; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.07); }
+    .card-header-brew { background: var(--brew-dark); color: var(--brew-gold); border-radius: 12px 12px 0 0 !important; padding: .8rem 1.2rem; font-weight: 700; }
+
+    /* Stat cards */
+    .stat-card { border-radius: 12px; padding: 1.3rem; border-left: 4px solid var(--brew-gold); background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+    .stat-card .stat-value { font-size: 1.9rem; font-weight: 700; color: var(--brew-dark); }
+    .stat-card .stat-label { font-size: .8rem; color: #888; text-transform: uppercase; letter-spacing: .05em; }
+
+    /* Badges */
+    .badge-pending   { background: #fff3cd; color: #856404; }
+    .badge-confirmed { background: #cce5ff; color: #004085; }
+    .badge-preparing { background: #d4edda; color: #155724; }
+    .badge-ready     { background: #d4edda; color: #0d6e2e; font-weight: 700; }
+    .badge-delivered { background: #e2e3e5; color: #383d41; }
+    .badge-cancelled { background: #f8d7da; color: #721c24; }
+
+    /* Footer */
+    footer { background: var(--brew-dark); color: #aaa; padding: 2.5rem 0; margin-top: 4rem; }
+    footer a { color: var(--brew-gold); text-decoration: none; }
+
+    /* Page hero */
+    .page-hero { background: linear-gradient(135deg, var(--brew-dark) 0%, var(--brew-brown) 100%); color: #fff; padding: 3rem 0; margin-bottom: 2.5rem; }
+    .page-hero h1 { font-weight: 800; font-size: 2.2rem; }
+
+    /* Sidebar */
+    .sidebar-menu a { display: flex; align-items: center; gap: .6rem; padding: .6rem 1rem; border-radius: 8px; color: var(--brew-dark); text-decoration: none; font-weight: 500; transition: all .2s; }
+    .sidebar-menu a:hover, .sidebar-menu a.active { background: var(--brew-gold); color: var(--brew-dark); }
+
+    /* Section titles */
+    .section-title { font-weight: 700; font-size: 1.4rem; color: var(--brew-dark); position: relative; padding-bottom: .4rem; margin-bottom: 1.5rem; }
+    .section-title::after { content: ''; position: absolute; bottom: 0; left: 0; width: 50px; height: 3px; background: var(--brew-gold); border-radius: 2px; }
+
+    /* Alerts */
+    .alert { border-radius: 10px; border: none; }
+
+    /* Tables */
+    .table th { background: #f8f4ed; color: var(--brew-brown); font-size: .82rem; text-transform: uppercase; letter-spacing: .05em; border: none; }
+    .table td { border-color: #f0e8dc; vertical-align: middle; }
+
+    /* Product cards */
+    .product-card { border-radius: 14px; overflow: hidden; transition: transform .2s, box-shadow .2s; }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.12) !important; }
+    .product-card .card-img-top { height: 180px; object-fit: cover; background: #f0e8dc; }
+    .product-card .product-price { color: var(--brew-gold); font-size: 1.2rem; font-weight: 700; }
+
+    /* Progress steps */
+    .order-steps { display: flex; align-items: center; gap: 0; }
+    .step { flex: 1; text-align: center; font-size: .75rem; padding: .5rem; position: relative; }
+    .step::after { content: ''; position: absolute; top: 50%; right: 0; transform: translateY(-50%); width: 1px; height: 30px; background: #ddd; }
+    .step:last-child::after { display: none; }
+    .step.done .step-dot   { background: #28a745; }
+    .step.active .step-dot { background: var(--brew-gold); box-shadow: 0 0 0 4px rgba(200,134,10,.25); }
+    .step-dot { width: 12px; height: 12px; border-radius: 50%; background: #ddd; margin: 0 auto .3rem; }
+
+    /* Notification dot */
+    .notif-dot { width: 8px; height: 8px; background: var(--brew-gold); border-radius: 50%; display: inline-block; margin-left: 4px; }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .page-hero h1 { font-size: 1.5rem; }
+      .stat-card .stat-value { font-size: 1.4rem; }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if user.is_authenticated %}
+<!-- Authenticated Navbar -->
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'home' %}">Brew<span>Mate</span> ☕</a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}"><i class="fa fa-home me-1"></i>Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'menu' %}"><i class="fa fa-coffee me-1"></i>Menu</a></li>
+        {% if user.role == 'customer' %}
+        <li class="nav-item"><a class="nav-link" href="{% url 'reservation' %}"><i class="fa fa-calendar me-1"></i>Reserve</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'loyalty' %}"><i class="fa fa-star me-1"></i>Loyalty</a></li>
+        {% endif %}
+        {% if user.role in 'staff admin' %}
+        <li class="nav-item"><a class="nav-link" href="{% url 'staff_home' %}"><i class="fa fa-utensils me-1"></i>Kitchen</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'inventory' %}"><i class="fa fa-boxes me-1"></i>Inventory</a></li>
+        {% endif %}
+        {% if user.role == 'admin' %}
+        <li class="nav-item"><a class="nav-link" href="{% url 'admin_home' %}"><i class="fa fa-chart-bar me-1"></i>Admin</a></li>
+        {% endif %}
+      </ul>
+      <ul class="navbar-nav align-items-center gap-2">
+        <!-- Cart -->
+        {% if user.role == 'customer' %}
+        <li class="nav-item">
+          <a class="nav-link position-relative" href="{% url 'cart' %}">
+            <i class="fa fa-shopping-cart"></i>
+            {% if cart_count > 0 %}<span class="badge-cart">{{ cart_count }}</span>{% endif %}
+          </a>
+        </li>
+        {% endif %}
+        <!-- Notifications -->
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'notifications' %}">
+            <i class="fa fa-bell"></i>
+            {% if notif_count > 0 %}<span class="notif-dot"></span>{% endif %}
+          </a>
+        </li>
+        <!-- User dropdown -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+            <i class="fa fa-user-circle me-1"></i>{{ user.first_name }}
+            <span class="badge ms-1" style="background:var(--brew-gold);color:var(--brew-dark);font-size:.7rem">{{ user.role }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'dashboard' %}"><i class="fa fa-tachometer-alt me-2"></i>Dashboard</a></li>
+            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fa fa-user me-2"></i>Profile</a></li>
+            {% if user.role == 'customer' %}
+            <li><a class="dropdown-item" href="{% url 'my_orders' %}"><i class="fa fa-receipt me-2"></i>My Orders</a></li>
+            {% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="dropdown-item text-danger"><i class="fa fa-sign-out-alt me-2"></i>Logout</button>
+              </form>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+{% else %}
+<!-- Public Navbar -->
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'home' %}">Brew<span>Mate</span> ☕</a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'menu' %}">Menu</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About</a></li>
+      </ul>
+      <div class="d-flex gap-2">
+        <a href="{% url 'login' %}" class="btn btn-brew-outline btn-sm">Login</a>
+        <a href="{% url 'register' %}" class="btn btn-brew btn-sm">Sign Up</a>
+      </div>
+    </div>
+  </div>
+</nav>
+{% endif %}
+
+<!-- Messages -->
+{% if messages %}
+<div class="container mt-3">
+  {% for msg in messages %}
+  <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show" role="alert">
+    {% if msg.tags == 'success' %}<i class="fa fa-check-circle me-2"></i>
+    {% elif msg.tags == 'error' %}<i class="fa fa-exclamation-circle me-2"></i>
+    {% elif msg.tags == 'warning' %}<i class="fa fa-exclamation-triangle me-2"></i>
+    {% else %}<i class="fa fa-info-circle me-2"></i>{% endif %}
+    {{ msg }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% block content %}{% endblock %}
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <h5 style="color:var(--brew-gold);font-weight:800">BrewMate ☕</h5>
+        <p class="small mt-2">Your favourite coffee, crafted with love.<br>Order online, reserve a table, earn rewards.</p>
+      </div>
+      <div class="col-md-4 mb-3">
+        <h6 style="color:#fff">Quick Links</h6>
+        <ul class="list-unstyled small mt-2">
+          <li><a href="{% url 'menu' %}">Menu</a></li>
+          <li><a href="{% url 'reservation' %}">Reservations</a></li>
+          <li><a href="{% url 'loyalty' %}">Loyalty Program</a></li>
+          <li><a href="{% url 'about' %}">About Us</a></li>
+        </ul>
+      </div>
+      <div class="col-md-4 mb-3">
+        <h6 style="color:#fff">Hours</h6>
+        <ul class="list-unstyled small mt-2">
+          <li>Mon–Fri: 7 AM – 9 PM</li>
+          <li>Sat–Sun: 8 AM – 10 PM</li>
+          <li class="mt-2"><i class="fa fa-phone me-1" style="color:var(--brew-gold)"></i> +91 98765 43210</li>
+          <li><i class="fa fa-envelope me-1" style="color:var(--brew-gold)"></i> hello@brewmate.com</li>
+        </ul>
+      </div>
+    </div>
+    <hr style="border-color:#333; margin: 1.5rem 0">
+    <div class="text-center small">
+      &copy; 2024 BrewMate. Built with Django &amp; Bootstrap 5. ☕
+      | <a href="/api/products/">REST API</a>
+      | <a href="/admin/">Admin</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

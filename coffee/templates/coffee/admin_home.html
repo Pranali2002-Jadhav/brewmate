@@ -1,0 +1,86 @@
+{% extends 'coffee/base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div><h1><i class="fa fa-chart-bar me-2"></i>Admin Dashboard</h1><p class="mb-0" style="color:#ccc">Business overview & management</p></div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'admin_products' %}" class="btn btn-brew"><i class="fa fa-coffee me-1"></i>Products</a>
+      <a href="{% url 'admin_users' %}" class="btn btn-brew-outline" style="border-color:#aaa;color:#aaa"><i class="fa fa-users me-1"></i>Users</a>
+      <a href="/admin/" class="btn btn-brew-outline" style="border-color:#aaa;color:#aaa" target="_blank"><i class="fa fa-cog me-1"></i>Django Admin</a>
+    </div>
+  </div>
+</div>
+<div class="container pb-5">
+
+  <!-- Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value" style="font-size:1.5rem">₹{{ total_revenue|floatformat:0 }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card" style="border-color:#28a745"><div class="stat-label">Today Revenue</div><div class="stat-value" style="font-size:1.5rem;color:#28a745">₹{{ today_revenue|floatformat:0 }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card" style="border-color:#17a2b8"><div class="stat-label">Total Orders</div><div class="stat-value">{{ total_orders }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card" style="border-color:#6f42c1"><div class="stat-label">Today Orders</div><div class="stat-value">{{ today_orders }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card" style="border-color:#fd7e14"><div class="stat-label">Customers</div><div class="stat-value">{{ total_users }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card" style="border-color:#dc3545"><div class="stat-label">Low Stock Items</div><div class="stat-value" style="color:#dc3545">{{ low_stock }}</div></div></div>
+    <div class="col-6 col-md-3"><div class="stat-card" style="border-color:#20c997"><div class="stat-label">Active Now</div><div class="stat-value">{{ status_stats|length }}</div><div class="stat-label">Order types</div></div></div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card" style="border-color:#0dcaf0">
+        <div class="stat-label">Order Status</div>
+        {% for stat in status_stats %}
+        <div class="d-flex justify-content-between small mt-1">
+          <span>{{ stat.status }}</span><span class="badge" style="background:var(--brew-gold);color:var(--brew-dark)">{{ stat.count }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Recent Orders -->
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header-brew d-flex justify-content-between align-items-center">
+          <span><i class="fa fa-receipt me-2"></i>Recent Orders</span>
+          <a href="{% url 'staff_orders' %}" class="btn btn-sm" style="background:rgba(255,255,255,.1);color:var(--brew-gold)">View All</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead><tr><th>Order #</th><th>Customer</th><th>Total</th><th>Status</th><th>Time</th></tr></thead>
+              <tbody>
+                {% for order in recent_orders %}
+                <tr>
+                  <td><a href="{% url 'order_detail' order.pk %}" class="fw-700" style="color:var(--brew-gold);text-decoration:none">{{ order.order_number }}</a></td>
+                  <td class="small">{{ order.user.get_full_name }}</td>
+                  <td class="fw-700">₹{{ order.total }}</td>
+                  <td><span class="badge badge-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                  <td class="small text-muted">{{ order.created_at|timesince }} ago</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header-brew"><i class="fa fa-th me-2"></i>Quick Access</div>
+        <div class="card-body">
+          <div class="sidebar-menu d-flex flex-column gap-1">
+            <a href="{% url 'staff_home' %}"><i class="fa fa-utensils me-2"></i>Kitchen Board</a>
+            <a href="{% url 'staff_orders' %}"><i class="fa fa-receipt me-2"></i>All Orders</a>
+            <a href="{% url 'admin_products' %}"><i class="fa fa-coffee me-2"></i>Menu Products</a>
+            <a href="{% url 'admin_add_product' %}"><i class="fa fa-plus me-2"></i>Add Product</a>
+            <a href="{% url 'inventory' %}"><i class="fa fa-boxes me-2"></i>Inventory</a>
+            <a href="{% url 'admin_users' %}"><i class="fa fa-users me-2"></i>Users</a>
+            <a href="{% url 'admin_reservations' %}"><i class="fa fa-calendar me-2"></i>Reservations</a>
+            <a href="/admin/" target="_blank"><i class="fa fa-cog me-2"></i>Django Admin</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

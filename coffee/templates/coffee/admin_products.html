@@ -1,0 +1,48 @@
+{% extends 'coffee/base.html' %}
+{% block title %}Admin — Products{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <h1><i class="fa fa-coffee me-2"></i>Menu Products</h1>
+    <a href="{% url 'admin_add_product' %}" class="btn btn-brew"><i class="fa fa-plus me-2"></i>Add Product</a>
+  </div>
+</div>
+<div class="container pb-5">
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Available</th><th>Featured</th><th>Prep</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for p in products %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  {% if p.image %}<img src="{{ p.image.url }}" style="width:40px;height:40px;border-radius:8px;object-fit:cover" alt="">
+                  {% else %}<div style="width:40px;height:40px;border-radius:8px;background:#f8f4ed;display:flex;align-items:center;justify-content:center">☕</div>{% endif %}
+                  <span class="fw-700">{{ p.name }}</span>
+                </div>
+              </td>
+              <td class="small">{{ p.category.icon }} {{ p.category.name }}</td>
+              <td class="fw-700" style="color:var(--brew-gold)">₹{{ p.price }}</td>
+              <td>{% if p.is_available %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-danger">No</span>{% endif %}</td>
+              <td>{% if p.is_featured %}<span class="badge bg-warning text-dark">⭐ Yes</span>{% else %}<span class="text-muted small">—</span>{% endif %}</td>
+              <td class="small">{{ p.prep_time }} min</td>
+              <td>
+                <div class="d-flex gap-1">
+                  <a href="{% url 'admin_edit_product' p.pk %}" class="btn btn-sm btn-brew"><i class="fa fa-edit"></i></a>
+                  <form method="post" action="{% url 'admin_delete_product' p.pk %}">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-danger" onclick="return confirm('Delete {{ p.name }}?')"><i class="fa fa-trash"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

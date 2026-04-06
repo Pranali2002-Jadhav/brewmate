@@ -1,0 +1,181 @@
+{% extends 'coffee/base.html' %}
+{% block title %}Your Cart{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1><i class="fa fa-shopping-cart me-2"></i>Your Cart</h1>
+    <p class="mb-0 mt-1" style="color:#ccc">Review your order before checkout</p>
+  </div>
+</div>
+
+<div class="container pb-5">
+  {% if items %}
+  <div class="row g-4">
+    <!-- Cart Items -->
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="card-header-brew d-flex justify-content-between align-items-center">
+          <span><i class="fa fa-shopping-bag me-2"></i>Cart Items ({{ items|length }})</span>
+          <form method="post" action="{% url 'clear_cart' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm" style="background:rgba(220,53,69,.3);color:#ff6b7a;border:none" onclick="return confirm('Clear cart?')">
+              <i class="fa fa-trash me-1"></i>Clear
+            </button>
+          </form>
+        </div>
+        <div class="card-body p-0">
+          {% for item in items %}
+          <div class="d-flex align-items-center gap-3 p-3 {% if not forloop.last %}border-bottom{% endif %}">
+            <div style="width:60px;height:60px;background:#f8f4ed;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0">
+              {% if item.product.image %}<img src="{{ item.product.image.url }}" style="width:60px;height:60px;object-fit:cover;border-radius:10px" alt="">{% else %}☕{% endif %}
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-700">{{ item.product.name }}</div>
+              <div class="small text-muted">₹{{ item.product.price }} each</div>
+              {% if item.notes %}<div class="small text-muted fst-italic">📝 {{ item.notes }}</div>{% endif %}
+            </div>
+            <!-- Quantity updater -->
+            <form method="post" action="{% url 'update_cart' item.id %}" class="d-flex align-items-center gap-1">
+              {% csrf_token %}
+              <input type="number" name="quantity" value="{{ item.quantity }}" min="0" max="20"
+                     class="form-control form-control-sm text-center" style="width:60px"
+                     onchange="this.form.submit()">
+            </form>
+            <div class="fw-700" style="min-width:70px;text-align:right;color:var(--brew-gold)">₹{{ item.subtotal }}</div>
+            <form method="post" action="{% url 'remove_from_cart' item.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm text-danger border-0 bg-transparent"><i class="fa fa-trash"></i></button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Summary + Checkout Form -->
+    <div class="col-lg-5">
+      <div class="card sticky-top" style="top:80px">
+        <div class="card-header-brew"><i class="fa fa-receipt me-2"></i>Order Summary</div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-2 small">
+            <span class="text-muted">Subtotal</span><span class="fw-600">₹{{ cart.total }}</span>
+          </div>
+
+          {% if loyalty and loyalty.can_redeem %}
+          <div class="p-3 rounded mb-3" style="background:#fff8ec;border:1.5px solid var(--brew-gold)">
+            <div class="fw-700 small mb-1">⭐ Loyalty Points</div>
+            <div class="small text-muted mb-2">You have {{ loyalty.points }} pts = ₹{{ loyalty.redeem_value }} off</div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="useLP" onchange="toggleLoyalty(this)">
+              <label class="form-check-label small fw-600" for="useLP">Use loyalty points discount</label>
+            </div>
+          </div>
+          {% endif %}
+
+          <hr>
+          <div class="d-flex justify-content-between mb-3">
+            <span class="fw-700 fs-6">Total</span>
+            <span class="fw-800 fs-5" id="totalDisplay" style="color:var(--brew-gold)">₹{{ cart.total }}</span>
+          </div>
+
+          <form method="post" action="{% url 'checkout' %}" id="checkoutForm">
+            {% csrf_token %}
+            {% if loyalty and loyalty.can_redeem %}
+            <input type="hidden" name="use_loyalty" value="0" id="loyaltyInput">
+            {% endif %}
+
+            <div class="mb-3">
+              <label class="form-label fw-700 small">Order Type</label>
+              <div class="d-flex gap-2">
+                <label class="flex-fill">
+                  <input type="radio" name="order_type" value="dine_in" class="btn-check" id="ot1" checked onchange="toggleTableField(this)">
+                  <label for="ot1" class="btn btn-brew-outline btn-sm w-100">🪑 Dine In</label>
+                </label>
+                <label class="flex-fill">
+                  <input type="radio" name="order_type" value="takeaway" class="btn-check" id="ot2" onchange="toggleTableField(this)">
+                  <label for="ot2" class="btn btn-brew-outline btn-sm w-100">🥡 Takeaway</label>
+                </label>
+                <label class="flex-fill">
+                  <input type="radio" name="order_type" value="delivery" class="btn-check" id="ot3" onchange="toggleTableField(this)">
+                  <label for="ot3" class="btn btn-brew-outline btn-sm w-100">🛵 Delivery</label>
+                </label>
+              </div>
+            </div>
+
+            <div class="mb-3" id="tableField">
+              <label class="form-label fw-700 small">Table Number</label>
+              <input type="number" name="table_number" class="form-control" placeholder="e.g. 3" min="1">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-700 small">Payment Method</label>
+              <div class="d-flex gap-2">
+                <label class="flex-fill">
+                  <input type="radio" name="payment_method" value="cash" class="btn-check" id="pm1" checked>
+                  <label for="pm1" class="btn btn-brew-outline btn-sm w-100">💵 Cash</label>
+                </label>
+                <label class="flex-fill">
+                  <input type="radio" name="payment_method" value="card" class="btn-check" id="pm2">
+                  <label for="pm2" class="btn btn-brew-outline btn-sm w-100">💳 Card</label>
+                </label>
+                <label class="flex-fill">
+                  <input type="radio" name="payment_method" value="upi" class="btn-check" id="pm3">
+                  <label for="pm3" class="btn btn-brew-outline btn-sm w-100">📱 UPI</label>
+                </label>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-700 small">Special Instructions</label>
+              <textarea name="special_notes" class="form-control" rows="2" placeholder="Any special requests..."></textarea>
+            </div>
+
+            <div class="small text-muted mb-3">
+              <i class="fa fa-star me-1" style="color:var(--brew-gold)"></i>
+              You'll earn ~{{ cart.total|floatformat:0 }} loyalty points on this order
+            </div>
+
+            <button type="submit" class="btn btn-brew w-100 py-2 fw-700 fs-6">
+              <i class="fa fa-check-circle me-2"></i>Place Order
+            </button>
+          </form>
+
+          <a href="{% url 'menu' %}" class="btn btn-brew-outline w-100 mt-2 btn-sm">
+            <i class="fa fa-arrow-left me-1"></i>Continue Shopping
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="text-center py-5">
+    <div style="font-size:5rem">🛒</div>
+    <h3 class="mt-3 fw-700">Your cart is empty</h3>
+    <p class="text-muted">Add some delicious items from our menu!</p>
+    <a href="{% url 'menu' %}" class="btn btn-brew btn-lg px-5 mt-2">
+      <i class="fa fa-coffee me-2"></i>Browse Menu
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const cartTotal = {{ cart.total|default:0 }};
+const loyaltyDiscount = {{ loyalty.redeem_value|default:0 }};
+
+function toggleTableField(radio) {
+  document.getElementById('tableField').style.display =
+    radio.value === 'dine_in' ? '' : 'none';
+}
+
+function toggleLoyalty(cb) {
+  const inp = document.getElementById('loyaltyInput');
+  if (inp) inp.value = cb.checked ? '1' : '0';
+  const disc = cb.checked ? Math.min(loyaltyDiscount, cartTotal) : 0;
+  document.getElementById('totalDisplay').textContent = '₹' + (cartTotal - disc).toFixed(2);
+}
+</script>
+{% endblock %}

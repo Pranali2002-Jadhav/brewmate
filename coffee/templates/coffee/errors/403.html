@@ -1,0 +1,18 @@
+{% extends 'coffee/base.html' %}
+{% block title %}403 — Forbidden{% endblock %}
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center" style="background:linear-gradient(135deg,#1a0a00,#4a2512)">
+  <div class="container text-center py-5">
+    <div style="font-size:6rem">🚫</div>
+    <h1 class="mt-3" style="color:#fff;font-size:4rem;font-weight:800">403</h1>
+    <h3 style="color:var(--brew-gold)">Access Forbidden</h3>
+    <p style="color:#ccc;max-width:400px;margin:1rem auto">
+      You don't have permission to access this page. Please login with the correct account.
+    </p>
+    <div class="d-flex gap-3 justify-content-center mt-4">
+      <a href="{% url 'home' %}" class="btn btn-brew px-4">Go Home</a>
+      <a href="{% url 'login' %}" class="btn btn-brew-outline px-4">Login</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'coffee/base.html' %}
+{% block title %}Staff — All Orders{% endblock %}
+{% block content %}
+<div class="page-hero"><div class="container"><h1><i class="fa fa-list me-2"></i>All Orders</h1></div></div>
+<div class="container pb-5">
+  <!-- Filter tabs -->
+  <div class="d-flex gap-2 flex-wrap mb-4">
+    <a href="{% url 'staff_orders' %}" class="btn btn-sm {% if not selected_status %}btn-brew{% else %}btn-brew-outline{% endif %}">All</a>
+    {% for k, v in status_choices %}
+    <a href="?status={{ k }}" class="btn btn-sm {% if selected_status == k %}btn-brew{% else %}btn-brew-outline{% endif %}">{{ v }}</a>
+    {% endfor %}
+  </div>
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>Order #</th><th>Customer</th><th>Type</th><th>Items</th><th>Total</th><th>Status</th><th>Time</th><th>Action</th></tr></thead>
+          <tbody>
+            {% for order in orders %}
+            <tr>
+              <td class="fw-700">{{ order.order_number }}</td>
+              <td class="small">{{ order.user.get_full_name }}<br><span class="text-muted">{{ order.user.email }}</span></td>
+              <td class="small">{{ order.get_order_type_display }}</td>
+              <td class="small">{{ order.items.count }}</td>
+              <td class="fw-700" style="color:var(--brew-gold)">₹{{ order.total }}</td>
+              <td><span class="badge badge-{{ order.status }}">{{ order.get_status_display }}</span></td>
+              <td class="small text-muted">{{ order.created_at|date:"d M, g:i A" }}</td>
+              <td>
+                <div class="d-flex gap-1 flex-wrap">
+                  {% if order.status == 'pending' %}
+                  <form method="post" action="{% url 'update_order_status' order.pk %}">{% csrf_token %}<input type="hidden" name="status" value="confirmed"><button class="btn btn-xs btn-brew" style="padding:2px 8px;font-size:.75rem">Confirm</button></form>
+                  {% elif order.status == 'confirmed' %}
+                  <form method="post" action="{% url 'update_order_status' order.pk %}">{% csrf_token %}<input type="hidden" name="status" value="preparing"><button class="btn btn-xs btn-brew" style="padding:2px 8px;font-size:.75rem">Prepare</button></form>
+                  {% elif order.status == 'preparing' %}
+                  <form method="post" action="{% url 'update_order_status' order.pk %}">{% csrf_token %}<input type="hidden" name="status" value="ready"><button class="btn btn-xs btn-success" style="padding:2px 8px;font-size:.75rem">Ready</button></form>
+                  {% elif order.status == 'ready' %}
+                  <form method="post" action="{% url 'update_order_status' order.pk %}">{% csrf_token %}<input type="hidden" name="status" value="delivered"><button class="btn btn-xs btn-secondary" style="padding:2px 8px;font-size:.75rem">Delivered</button></form>
+                  {% endif %}
+                  <a href="{% url 'order_detail' order.pk %}" class="btn btn-xs btn-brew-outline" style="padding:2px 8px;font-size:.75rem">View</a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% if orders.has_other_pages %}
+  <nav class="mt-4"><ul class="pagination justify-content-center">
+    {% if orders.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ orders.previous_page_number }}&status={{ selected_status }}">Prev</a></li>{% endif %}
+    <li class="page-item active"><span class="page-link" style="background:var(--brew-gold);border-color:var(--brew-gold)">{{ orders.number }}</span></li>
+    {% if orders.has_next %}<li class="page-item"><a class="page-link" href="?page={{ orders.next_page_number }}&status={{ selected_status }}">Next</a></li>{% endif %}
+  </ul></nav>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'coffee/base.html' %}
+{% block title %}Reservations{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container"><h1><i class="fa fa-calendar me-2"></i>Table Reservations</h1></div>
+</div>
+<div class="container pb-5">
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="card">
+        <div class="card-header-brew"><i class="fa fa-calendar-plus me-2"></i>Book a Table</div>
+        <div class="card-body">
+          <form method="post" action="{% url 'reservation' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label fw-600 small">Date *</label>
+              {{ form.date }}
+              {% if form.date.errors %}<div class="text-danger small">{{ form.date.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-600 small">Time *</label>
+              {{ form.time_slot }}
+              {% if form.time_slot.errors %}<div class="text-danger small">{{ form.time_slot.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-600 small">Number of Guests *</label>
+              {{ form.guests }}
+              {% if form.guests.errors %}<div class="text-danger small">{{ form.guests.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-600 small">Special Requests</label>
+              {{ form.special_requests }}
+            </div>
+            <button type="submit" class="btn btn-brew w-100 py-2 fw-600">
+              <i class="fa fa-check me-2"></i>Confirm Reservation
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <div class="section-title">Upcoming Reservations</div>
+      {% if my_res %}
+      {% for res in my_res %}
+      <div class="card mb-3" style="border-left:4px solid {% if res.status == 'confirmed' %}var(--brew-gold){% else %}#ccc{% endif %}">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <span style="font-size:1.5rem;font-weight:800;font-family:monospace;color:var(--brew-gold)">{{ res.confirmation_code }}</span>
+                <span class="badge {% if res.status == 'confirmed' %}bg-success{% elif res.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}">{{ res.get_status_display }}</span>
+              </div>
+              <div class="small text-muted">
+                <i class="fa fa-calendar me-1"></i>{{ res.date|date:"D, d M Y" }}
+                &nbsp;|&nbsp;<i class="fa fa-clock me-1"></i>{{ res.time_slot|time:"g:i A" }}
+                &nbsp;|&nbsp;<i class="fa fa-users me-1"></i>{{ res.guests }} guest{{ res.guests|pluralize }}
+                {% if res.table %}&nbsp;|&nbsp;<i class="fa fa-chair me-1"></i>Table {{ res.table.number }}{% endif %}
+              </div>
+              {% if res.special_requests %}<div class="small text-muted mt-1">📝 {{ res.special_requests }}</div>{% endif %}
+            </div>
+            <div class="col-md-4 text-md-end mt-2 mt-md-0">
+              {% if res.status == 'confirmed' %}
+              <form method="post" action="{% url 'cancel_reservation' res.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Cancel this reservation?')">
+                  <i class="fa fa-times me-1"></i>Cancel
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="text-center py-5 text-muted">
+        <div style="font-size:4rem">📅</div>
+        <p class="mt-2">No upcoming reservations. Book a table!</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

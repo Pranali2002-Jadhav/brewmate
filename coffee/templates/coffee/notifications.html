@@ -1,0 +1,31 @@
+{% extends 'coffee/base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-hero"><div class="container"><h1><i class="fa fa-bell me-2"></i>Notifications</h1></div></div>
+<div class="container pb-5">
+  <div class="card">
+    <div class="card-body p-0">
+      {% if notifs %}
+      {% for n in notifs %}
+      <div class="d-flex gap-3 p-3 {% if not forloop.last %}border-bottom{% endif %} {% if not n.is_read %}{% endif %}" style="{% if not n.is_read %}background:#fdf8f2{% endif %}">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--brew-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.3rem">
+          {% if n.notif_type == 'order' %}🛍️{% elif n.notif_type == 'loyalty' %}⭐{% elif n.notif_type == 'reservation' %}📅{% else %}📢{% endif %}
+        </div>
+        <div class="flex-grow-1">
+          <div class="fw-700 small">{{ n.title }}</div>
+          <div class="text-muted small">{{ n.message }}</div>
+          <div class="text-muted" style="font-size:.75rem;margin-top:.3rem">{{ n.created_at|timesince }} ago</div>
+        </div>
+        {% if not n.is_read %}<div><span class="badge" style="background:var(--brew-gold);color:var(--brew-dark);font-size:.65rem">New</span></div>{% endif %}
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="text-center p-5 text-muted">
+        <div style="font-size:4rem">🔔</div>
+        <p class="mt-2">No notifications yet.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

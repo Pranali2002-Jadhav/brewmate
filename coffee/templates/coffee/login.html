@@ -1,0 +1,50 @@
+{% extends 'coffee/base.html' %}
+{% comment %}Save as: coffee/templates/coffee/login.html{% endcomment %}
+
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center py-5" style="background:linear-gradient(135deg,#1a0a00,#4a2512)">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-5 col-lg-4">
+        <div class="card p-4 shadow-lg">
+          <div class="text-center mb-4">
+            <div style="font-size:3.5rem">☕</div>
+            <h4 class="fw-800 mt-2">Welcome Back!</h4>
+            <p class="text-muted small">Sign in to your BrewMate account</p>
+          </div>
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger"><i class="fa fa-exclamation-circle me-2"></i>{{ form.non_field_errors|join:", " }}</div>
+          {% endif %}
+          <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label fw-600 small">Email Address</label>
+              {{ form.username }}
+              {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors|join:", " }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-600 small">Password</label>
+              {{ form.password }}
+              {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors|join:", " }}</div>{% endif %}
+            </div>
+            <button type="submit" class="btn btn-brew w-100 py-2 fw-600">
+              <i class="fa fa-sign-in-alt me-2"></i>Login
+            </button>
+          </form>
+          <hr class="my-3">
+          <div class="text-center small text-muted">
+            Don't have an account? <a href="{% url 'register' %}" style="color:var(--brew-gold);font-weight:600">Sign Up Free</a>
+          </div>
+          <div class="mt-3 p-3 rounded small" style="background:#f8f4ed;color:#666">
+            <strong>Demo accounts:</strong><br>
+            Admin: admin@brewmate.com / admin123<br>
+            Staff: staff@brewmate.com / staff123<br>
+            Customer: demo@brewmate.com / demo123
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

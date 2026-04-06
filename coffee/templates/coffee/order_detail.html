@@ -1,0 +1,123 @@
+{% extends 'coffee/base.html' %}
+{% block title %}Order {{ order.order_number }}{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1><i class="fa fa-receipt me-2"></i>Order {{ order.order_number }}</h1>
+    <p class="mb-0 mt-1" style="color:#ccc">{{ order.created_at|date:"D, d M Y — g:i A" }}</p>
+  </div>
+</div>
+<div class="container pb-5">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <!-- Status tracker -->
+      <div class="card mb-4">
+        <div class="card-header-brew d-flex justify-content-between align-items-center">
+          <span><i class="fa fa-map-marker-alt me-2"></i>Order Status</span>
+          <span class="badge badge-{{ order.status }} px-3 py-2" style="font-size:.85rem">{{ order.get_status_display }}</span>
+        </div>
+        <div class="card-body py-4">
+          <div class="order-steps">
+            {% for step_key, step_label in order.STATUS %}
+            {% if step_key != 'cancelled' %}
+            <div class="step {% if order.status == step_key %}active{% elif order.status in 'confirmed preparing ready delivered' and step_key == 'pending' %}done{% elif order.status in 'preparing ready delivered' and step_key == 'confirmed' %}done{% elif order.status in 'ready delivered' and step_key == 'preparing' %}done{% elif order.status == 'delivered' and step_key == 'ready' %}done{% endif %}">
+              <div class="step-dot"></div>
+              <div>{{ step_label }}</div>
+            </div>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% if order.status == 'ready' %}
+          <div class="alert mt-3 mb-0 text-center py-2 fw-700" style="background:#d4edda;color:#0d6e2e;border:none;border-radius:8px">
+            🎉 Your order is ready! Please collect at the counter.
+          </div>
+          {% elif order.status == 'delivered' %}
+          <div class="alert mt-3 mb-0 text-center py-2 fw-700" style="background:#d4edda;color:#0d6e2e;border:none;border-radius:8px">
+            ✅ Delivered! Enjoy your coffee. ☕
+          </div>
+          {% elif order.status in 'pending confirmed preparing' %}
+          <div class="text-center mt-3 text-muted small">
+            <i class="fa fa-clock me-1"></i>Estimated time: <strong>{{ order.estimated_time }} minutes</strong>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div class="card">
+        <div class="card-header-brew"><i class="fa fa-coffee me-2"></i>Ordered Items</div>
+        <div class="card-body p-0">
+          {% for item in order.items.all %}
+          <div class="d-flex align-items-center gap-3 p-3 {% if not forloop.last %}border-bottom{% endif %}">
+            <div style="width:48px;height:48px;background:#f8f4ed;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0">☕</div>
+            <div class="flex-grow-1">
+              <div class="fw-700">{{ item.product.name }}</div>
+              <div class="small text-muted">{{ item.quantity }} × ₹{{ item.unit_price }}</div>
+              {% if item.notes %}<div class="small text-muted fst-italic">📝 {{ item.notes }}</div>{% endif %}
+            </div>
+            <div class="fw-700" style="color:var(--brew-gold)">₹{{ item.subtotal }}</div>
+          </div>
+          {% endfor %}
+          <div class="p-3 border-top">
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="text-muted">Subtotal</span><span>₹{{ order.subtotal }}</span>
+            </div>
+            {% if order.discount %}<div class="d-flex justify-content-between small mb-1" style="color:#28a745">
+              <span>Loyalty Discount</span><span>-₹{{ order.discount }}</span>
+            </div>{% endif %}
+            <div class="d-flex justify-content-between fw-800 fs-5 mt-2 pt-2 border-top">
+              <span>Total</span><span style="color:var(--brew-gold)">₹{{ order.total }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <!-- Order Info -->
+      <div class="card mb-3">
+        <div class="card-header-brew"><i class="fa fa-info-circle me-2"></i>Order Info</div>
+        <div class="card-body">
+          <table class="table table-borderless table-sm mb-0" style="font-size:.9rem">
+            <tr><td class="text-muted">Order Type</td><td class="fw-600">{{ order.get_order_type_display }}</td></tr>
+            {% if order.table %}<tr><td class="text-muted">Table</td><td class="fw-600">Table {{ order.table.number }}</td></tr>{% endif %}
+            {% if order.special_notes %}<tr><td class="text-muted">Notes</td><td class="fw-600">{{ order.special_notes }}</td></tr>{% endif %}
+          </table>
+        </div>
+      </div>
+
+      <!-- Payment -->
+      {% if payment %}
+      <div class="card mb-3">
+        <div class="card-header-brew"><i class="fa fa-credit-card me-2"></i>Payment</div>
+        <div class="card-body">
+          <table class="table table-borderless table-sm mb-0" style="font-size:.9rem">
+            <tr><td class="text-muted">Method</td><td class="fw-600">{{ payment.get_method_display }}</td></tr>
+            <tr><td class="text-muted">Status</td>
+              <td><span class="badge {% if payment.status == 'paid' %}bg-success{% elif payment.status == 'pending' %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ payment.get_status_display }}</span></td>
+            </tr>
+            <tr><td class="text-muted">Amount</td><td class="fw-600">₹{{ payment.amount }}</td></tr>
+            {% if payment.transaction_id %}<tr><td class="text-muted">Ref</td><td class="fw-600 small">{{ payment.transaction_id }}</td></tr>{% endif %}
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="d-grid gap-2">
+        <a href="{% url 'my_orders' %}" class="btn btn-brew-outline"><i class="fa fa-list me-2"></i>All Orders</a>
+        <a href="{% url 'menu' %}" class="btn btn-brew"><i class="fa fa-plus me-2"></i>Order Again</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Auto-refresh for active orders
+  const active = ['pending','confirmed','preparing','ready'];
+  if (active.includes('{{ order.status }}')) {
+    setTimeout(() => location.reload(), 30000);
+  }
+</script>
+{% endblock %}

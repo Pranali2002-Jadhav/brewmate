@@ -1,0 +1,147 @@
+{% extends 'coffee/base.html' %}
+{% block title %}Kitchen Board{% endblock %}
+
+{% block extra_css %}
+<style>
+  .kitchen-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+  .live-dot { display: inline-block; width: 10px; height: 10px; background: #27ae60; border-radius: 50%; margin-right: 0.4rem; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+  .kitchen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.2rem; }
+  .order-ticket { background: #fff; border-radius: 12px; padding: 1.3rem; box-shadow: 0 2px 12px rgba(45,27,14,0.1); border-top: 4px solid #e8a44a; position: relative; }
+  .order-ticket.preparing { border-top-color: #3498db; }
+  .order-ticket.ready     { border-top-color: #27ae60; }
+  .ticket-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .ticket-id { font-size: 1.3rem; font-weight: 700; color: #2d1b0e; }
+  .ticket-time { font-size: 0.82rem; color: #aaa; }
+  .ticket-table { font-size: 0.85rem; color: #7a5c3a; background: #f8f4ed; padding: 0.3rem 0.7rem; border-radius: 6px; }
+  .ticket-items { margin: 0.8rem 0; }
+  .ticket-item { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed #f0e8dc; font-size: 0.9rem; }
+  .ticket-item:last-child { border-bottom: none; }
+  .item-qty { background: #2d1b0e; color: #e8a44a; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+  .ticket-notes { font-size: 0.8rem; color: #7a5c3a; background: #f8f4ed; border-radius: 6px; padding: 0.5rem 0.7rem; margin-top: 0.5rem; }
+  .status-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+  .timer { font-size: 0.9rem; font-weight: 600; color: #e74c3c; }
+  .empty-kitchen { text-align: center; padding: 5rem; color: #7a5c3a; }
+  .stats-bar { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .ks { background: #fff; border-radius: 10px; padding: 0.8rem 1.2rem; text-align: center; min-width: 100px; box-shadow: 0 1px 6px rgba(45,27,14,0.06); }
+  .ks-num { font-size: 1.8rem; font-weight: 700; color: #2d1b0e; }
+  .ks-label { font-size: 0.75rem; color: #7a5c3a; text-transform: uppercase; letter-spacing: 0.05em; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="kitchen-header">
+    <div>
+      <div class="page-title">
+        <span class="live-dot"></span> Kitchen Board
+      </div>
+      <div class="page-subtitle">Live order management for staff</div>
+    </div>
+    <button onclick="location.reload()" class="btn btn-outline">
+      <i class="fa fa-sync"></i> Refresh
+    </button>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <div class="ks">
+      <div class="ks-num">{{ active_orders|length }}</div>
+      <div class="ks-label">Active</div>
+    </div>
+    <div class="ks">
+      <div class="ks-num" style="color:#ffc107">
+        {% with active_orders|length as n %}{{ n }}{% endwith %}
+      </div>
+      <div class="ks-label">Pending</div>
+    </div>
+    <div class="ks">
+      <div class="ks-num" style="color:#27ae60">0</div>
+      <div class="ks-label">Ready</div>
+    </div>
+  </div>
+
+  {% if active_orders %}
+  <div class="kitchen-grid">
+    {% for order in active_orders %}
+    <div class="order-ticket {{ order.status }}">
+      <div class="ticket-header">
+        <div>
+          <div class="ticket-id">#{{ order.id }}</div>
+          <div class="ticket-time">{{ order.created_at|timesince }} ago</div>
+        </div>
+        <div style="text-align:right">
+          <span class="badge badge-{{ order.status }}">{{ order.get_status_display }}</span>
+          {% if order.table %}<div class="ticket-table">🪑 Table {{ order.table.number }}</div>
+          {% else %}<div class="ticket-table">🥡 Takeaway</div>{% endif %}
+        </div>
+      </div>
+
+      <!-- Customer -->
+      <div style="font-size:0.82rem;color:#7a5c3a;margin-bottom:0.5rem">
+        <i class="fa fa-user"></i> {{ order.user.get_full_name }} · ₹{{ order.total }}
+      </div>
+
+      <!-- Items -->
+      <div class="ticket-items">
+        {% for item in order.items.all %}
+        <div class="ticket-item">
+          <div style="display:flex;align-items:center;gap:0.6rem">
+            <span class="item-qty">{{ item.quantity }}</span>
+            <span>{{ item.menu_item.name }}</span>
+          </div>
+          {% if item.notes %}<span style="font-size:0.78rem;color:#aaa">{{ item.notes }}</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if order.special_notes %}
+      <div class="ticket-notes">📝 {{ order.special_notes }}</div>
+      {% endif %}
+
+      <!-- Status Actions -->
+      <div class="status-actions">
+        {% if order.status == 'pending' %}
+          <form method="post" action="{% url 'update_order_status' order.id %}">
+            {% csrf_token %}<input type="hidden" name="status" value="preparing">
+            <button type="submit" class="btn btn-sm btn-dark"><i class="fa fa-fire"></i> Start Preparing</button>
+          </form>
+          <form method="post" action="{% url 'update_order_status' order.id %}">
+            {% csrf_token %}<input type="hidden" name="status" value="cancelled">
+            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Cancel order #{{ order.id }}?')">Cancel</button>
+          </form>
+        {% elif order.status == 'preparing' %}
+          <form method="post" action="{% url 'update_order_status' order.id %}">
+            {% csrf_token %}<input type="hidden" name="status" value="ready">
+            <button type="submit" class="btn btn-sm btn-success"><i class="fa fa-check"></i> Mark Ready</button>
+          </form>
+        {% elif order.status == 'ready' %}
+          <form method="post" action="{% url 'update_order_status' order.id %}">
+            {% csrf_token %}<input type="hidden" name="status" value="delivered">
+            <button type="submit" class="btn btn-sm btn-success"><i class="fa fa-check-double"></i> Delivered</button>
+          </form>
+          <span style="color:#27ae60;font-weight:600;font-size:0.85rem;align-self:center">⚡ Ready for pickup!</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="card">
+    <div class="empty-kitchen">
+      <div style="font-size:4rem">☕</div>
+      <h3 style="margin-bottom:0.5rem">All caught up!</h3>
+      <p>No active orders right now. Enjoy the break!</p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Auto-refresh kitchen every 20 seconds
+  setTimeout(() => location.reload(), 20000);
+</script>
+{% endblock %}

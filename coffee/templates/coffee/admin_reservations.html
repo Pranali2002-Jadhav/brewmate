@@ -1,0 +1,65 @@
+{% extends 'coffee/base.html' %}
+{% block title %}Admin — Reservations{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1><i class="fa fa-calendar me-2"></i>All Reservations</h1>
+    <p class="mb-0" style="color:#ccc">{{ reservations|length }} total reservations</p>
+  </div>
+</div>
+<div class="container pb-5">
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Guests</th>
+              <th>Table</th>
+              <th>Status</th>
+              <th>Special Requests</th>
+              <th>Booked</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for res in reservations %}
+            <tr>
+              <td>
+                <span style="font-family:monospace;font-weight:700;color:var(--brew-gold)">
+                  {{ res.confirmation_code }}
+                </span>
+              </td>
+              <td class="small">
+                <div class="fw-600">{{ res.user.get_full_name }}</div>
+                <div class="text-muted">{{ res.user.email }}</div>
+              </td>
+              <td class="small fw-600">{{ res.date|date:"D, d M Y" }}</td>
+              <td class="small">{{ res.time_slot|time:"g:i A" }}</td>
+              <td class="text-center small">
+                <i class="fa fa-users me-1"></i>{{ res.guests }}
+              </td>
+              <td class="small">
+                {% if res.table %}Table {{ res.table.number }}{% else %}<span class="text-muted">—</span>{% endif %}
+              </td>
+              <td>
+                <span class="badge {% if res.status == 'confirmed' %}bg-success{% elif res.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}">
+                  {{ res.get_status_display }}
+                </span>
+              </td>
+              <td class="small text-muted">{{ res.special_requests|truncatechars:40|default:"—" }}</td>
+              <td class="small text-muted">{{ res.created_at|date:"d M Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" class="text-center text-muted py-4">No reservations found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

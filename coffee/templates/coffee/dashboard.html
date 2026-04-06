@@ -1,0 +1,169 @@
+{% extends 'coffee/base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+  .hero { background: linear-gradient(135deg, #2d1b0e, #5a3a1a); color: #fff; border-radius: 16px; padding: 2.5rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+  .hero h2 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+  .hero p  { color: #e8a44a; font-size: 1rem; }
+  .hero-actions { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .action-card { background: #fff; border-radius: 12px; padding: 1.5rem; text-align: center; text-decoration: none; color: #2d1b0e; transition: all 0.2s; box-shadow: 0 2px 8px rgba(45,27,14,0.06); }
+  .action-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(45,27,14,0.12); }
+  .action-icon { font-size: 2rem; margin-bottom: 0.6rem; }
+  .action-label { font-weight: 600; font-size: 0.9rem; }
+  .action-sub { font-size: 0.75rem; color: #7a5c3a; margin-top: 0.2rem; }
+  .menu-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(45,27,14,0.06); transition: transform 0.2s; }
+  .menu-card:hover { transform: translateY(-2px); }
+  .menu-card-body { padding: 1rem; }
+  .menu-card-name { font-weight: 600; font-size: 0.95rem; }
+  .menu-card-price { color: #e8a44a; font-weight: 700; font-size: 1.1rem; }
+  .menu-card-img { width: 100%; height: 140px; background: linear-gradient(135deg, #f8f4ed, #ede8df); display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+  .loyalty-bar-wrap { background: #f8f4ed; border-radius: 8px; padding: 1rem; margin-top: 0.8rem; }
+  .loyalty-bar { background: #e0d8ce; border-radius: 20px; height: 10px; overflow: hidden; }
+  .loyalty-fill { background: #e8a44a; height: 100%; border-radius: 20px; transition: width 0.5s; }
+  .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.4rem; }
+  .dot-pending   { background: #ffc107; }
+  .dot-preparing { background: #007bff; }
+  .dot-ready     { background: #28a745; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div>
+      <h2>Good day, {{ user.first_name }}! ☕</h2>
+      <p>What are you having today?</p>
+    </div>
+    <div class="hero-actions">
+      <a href="{% url 'menu' %}" class="btn btn-primary"><i class="fa fa-coffee"></i> Order Now</a>
+      <a href="{% url 'reservations' %}" class="btn btn-outline" style="color:#e8a44a;border-color:#e8a44a"><i class="fa fa-calendar"></i> Book a Table</a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label"><i class="fa fa-star"></i> Loyalty Points</div>
+      <div class="stat-value" style="color:#e8a44a">{{ loyalty_points }}</div>
+      <div class="stat-sub">₹{{ loyalty_points|floatformat:0 | default:"0" }} redeemable</div>
+      <div class="loyalty-bar-wrap">
+        <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:#7a5c3a;margin-bottom:0.4rem">
+          <span>{{ loyalty_points }} pts</span><span>100 pts = free coffee</span>
+        </div>
+        <div class="loyalty-bar">
+          <div class="loyalty-fill" style="width:{% widthratio loyalty_points 100 100 %}%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="stat-card" style="border-color:#27ae60">
+      <div class="stat-label"><i class="fa fa-receipt"></i> Total Orders</div>
+      <div class="stat-value">{{ recent_orders|length }}</div>
+      <div class="stat-sub">Your recent orders</div>
+    </div>
+    <div class="stat-card" style="border-color:#3498db">
+      <div class="stat-label"><i class="fa fa-clock"></i> Active Orders</div>
+      <div class="stat-value">{{ active_orders|length }}</div>
+      <div class="stat-sub">Currently in progress</div>
+    </div>
+    {% if can_redeem %}
+    <div class="stat-card" style="border-color:#e74c3c;background:#fff8f8">
+      <div class="stat-label"><i class="fa fa-gift"></i> Free Coffee!</div>
+      <div class="stat-value" style="color:#e74c3c;font-size:1.4rem">You qualify!</div>
+      <div class="stat-sub">Use points at checkout</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Quick Actions -->
+  <h3 class="card-title" style="margin-bottom:1rem">Quick Actions</h3>
+  <div class="quick-actions">
+    <a href="{% url 'menu' %}" class="action-card">
+      <div class="action-icon">☕</div>
+      <div class="action-label">Order Coffee</div>
+      <div class="action-sub">Browse our full menu</div>
+    </a>
+    <a href="{% url 'cart' %}" class="action-card">
+      <div class="action-icon">🛒</div>
+      <div class="action-label">View Cart</div>
+      <div class="action-sub">Complete your order</div>
+    </a>
+    <a href="{% url 'reservations' %}" class="action-card">
+      <div class="action-icon">📅</div>
+      <div class="action-label">Reserve Table</div>
+      <div class="action-sub">Book a spot</div>
+    </a>
+    <a href="{% url 'my_orders' %}" class="action-card">
+      <div class="action-icon">📋</div>
+      <div class="action-label">My Orders</div>
+      <div class="action-sub">Track & history</div>
+    </a>
+    <a href="{% url 'loyalty' %}" class="action-card">
+      <div class="action-icon">⭐</div>
+      <div class="action-label">Loyalty Points</div>
+      <div class="action-sub">{{ loyalty_points }} points</div>
+    </a>
+    <a href="/api/menu/" class="action-card" target="_blank">
+      <div class="action-icon">🔌</div>
+      <div class="action-label">REST API</div>
+      <div class="action-sub">JSON endpoints</div>
+    </a>
+  </div>
+
+  <!-- Active Orders -->
+  {% if active_orders %}
+  <div class="card">
+    <div class="card-title"><i class="fa fa-fire" style="color:#e8a44a"></i> Active Orders</div>
+    <table>
+      <thead><tr><th>Order #</th><th>Status</th><th>Total</th><th>Time</th><th></th></tr></thead>
+      <tbody>
+        {% for order in active_orders %}
+        <tr>
+          <td><strong>#{{ order.id }}</strong></td>
+          <td>
+            <span class="status-dot dot-{{ order.status }}"></span>
+            <span class="badge badge-{{ order.status }}">{{ order.get_status_display }}</span>
+          </td>
+          <td><strong>₹{{ order.total }}</strong></td>
+          <td style="color:#7a5c3a;font-size:0.85rem">{{ order.created_at|timesince }} ago</td>
+          <td><a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-outline">Track</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- Featured Items -->
+  {% if featured_items %}
+  <h3 class="card-title" style="margin:2rem 0 1rem">Featured Today</h3>
+  <div class="grid-3">
+    {% for item in featured_items %}
+    <div class="menu-card">
+      <div class="menu-card-img">☕</div>
+      <div class="menu-card-body">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="menu-card-name">{{ item.name }}</div>
+          <div class="menu-card-price">₹{{ item.price }}</div>
+        </div>
+        <p style="font-size:0.8rem;color:#7a5c3a;margin:0.4rem 0">{{ item.description|truncatechars:60 }}</p>
+        <form method="post" action="{% url 'add_to_cart' %}">
+          {% csrf_token %}
+          <input type="hidden" name="item_id" value="{{ item.id }}">
+          <input type="hidden" name="quantity" value="1">
+          <button type="submit" class="btn btn-primary btn-sm btn-full" style="margin-top:0.5rem">
+            <i class="fa fa-plus"></i> Add to Cart
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

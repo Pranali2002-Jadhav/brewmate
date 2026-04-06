@@ -1,0 +1,73 @@
+{% extends 'coffee/base.html' %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+<div class="page-hero"><div class="container"><h1><i class="fa fa-user me-2"></i>My Profile</h1></div></div>
+<div class="container pb-5">
+  <div class="row g-4 justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header-brew"><i class="fa fa-edit me-2"></i>Update Profile</div>
+        <div class="card-body">
+          <!-- Current info -->
+          <div class="d-flex align-items-center gap-3 p-3 mb-4 rounded" style="background:#f8f4ed">
+            <div style="width:60px;height:60px;border-radius:50%;background:var(--brew-gold);display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:800;color:var(--brew-dark)">
+              {{ user.first_name.0 }}{{ user.last_name.0|default:"" }}
+            </div>
+            <div>
+              <div class="fw-700">{{ user.get_full_name }}</div>
+              <div class="small text-muted">{{ user.email }}</div>
+              <span class="badge mt-1" style="background:var(--brew-gold);color:var(--brew-dark)">{{ user.role }}</span>
+            </div>
+          </div>
+
+          <form method="post" action="{% url 'profile' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row g-3">
+              <div class="col-6">
+                <label class="form-label fw-600 small">First Name</label>
+                {{ form.first_name }}
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-600 small">Last Name</label>
+                {{ form.last_name }}
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-600 small">Email</label>
+                <input type="email" class="form-control" value="{{ user.email }}" disabled style="background:#f8f4ed">
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-600 small">Phone</label>
+                {{ form.phone }}
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-600 small">Profile Picture</label>
+                {{ form.avatar }}
+              </div>
+            </div>
+            <button type="submit" class="btn btn-brew w-100 mt-4 py-2 fw-600">
+              <i class="fa fa-save me-2"></i>Save Changes
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card mb-3">
+        <div class="card-header-brew"><i class="fa fa-star me-2"></i>Account Stats</div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted small">Member Since</span><span class="fw-600 small">{{ user.date_joined|date:"M Y" }}</span></div>
+          <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted small">Total Orders</span><span class="fw-600 small">{{ user.orders.count }}</span></div>
+          <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted small">Loyalty Points</span><span class="fw-600 small" style="color:var(--brew-gold)">{{ user.loyalty.points|default:0 }}</span></div>
+          <div class="d-flex justify-content-between py-2"><span class="text-muted small">Role</span><span class="badge" style="background:var(--brew-gold);color:var(--brew-dark)">{{ user.role }}</span></div>
+        </div>
+      </div>
+      <div class="d-grid gap-2">
+        <a href="{% url 'my_orders' %}" class="btn btn-brew-outline"><i class="fa fa-receipt me-2"></i>My Orders</a>
+        <a href="{% url 'loyalty' %}" class="btn btn-brew-outline"><i class="fa fa-star me-2"></i>Loyalty Points</a>
+        <a href="{% url 'reservation' %}" class="btn btn-brew-outline"><i class="fa fa-calendar me-2"></i>Reservations</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

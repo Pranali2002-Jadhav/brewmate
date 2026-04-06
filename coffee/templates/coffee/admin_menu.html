@@ -1,0 +1,107 @@
+{% extends 'coffee/base.html' %}
+{% block title %}Admin — Menu Management{% endblock %}
+
+{% block extra_css %}
+<style>
+  .admin-tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 2px solid #f0e8dc; padding-bottom: 0.5rem; }
+  .admin-tab { padding: 0.5rem 1.2rem; border-radius: 8px 8px 0 0; font-weight: 600; font-size: 0.9rem; cursor: pointer; color: #7a5c3a; background: none; border: none; }
+  .admin-tab.active { background: #2d1b0e; color: #e8a44a; }
+  .item-row { display: flex; align-items: center; gap: 1rem; padding: 0.9rem 0; border-bottom: 1px solid #f0e8dc; flex-wrap: wrap; }
+  .item-emoji-sm { width: 44px; height: 44px; background: #f8f4ed; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+  .item-details { flex: 1; min-width: 180px; }
+  .item-details .name { font-weight: 700; font-size: 0.9rem; }
+  .item-details .cat  { font-size: 0.78rem; color: #7a5c3a; }
+  .item-price-label { font-weight: 700; color: #e8a44a; }
+  .toggle-avail { background: none; border: 1.5px solid; border-radius: 6px; padding: 0.3rem 0.7rem; cursor: pointer; font-size: 0.78rem; font-weight: 600; }
+  .toggle-avail.on  { border-color: #27ae60; color: #27ae60; }
+  .toggle-avail.off { border-color: #e74c3c; color: #e74c3c; }
+  .summary-top { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .add-form-card { background: #f8f4ed; border-radius: 12px; padding: 1.5rem; margin-top: 2rem; }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media(max-width:600px){ .row-2 { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-title">Admin — Menu Management ⚙️</div>
+  <div class="page-subtitle">Manage menu items, categories, and availability</div>
+
+  <!-- Summary stats -->
+  <div class="summary-top">
+    <div class="stat-card">
+      <div class="stat-label">Total Items</div>
+      <div class="stat-value">{{ items|length }}</div>
+    </div>
+    <div class="stat-card" style="border-color:#27ae60">
+      <div class="stat-label">Available</div>
+      <div class="stat-value" style="color:#27ae60">
+        {% with items|length as total %}
+          {{ items|length }}
+        {% endwith %}
+      </div>
+    </div>
+    <div class="stat-card" style="border-color:#3498db">
+      <div class="stat-label">Categories</div>
+      <div class="stat-value">{{ categories|length }}</div>
+    </div>
+  </div>
+
+  <!-- Menu Items list -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.8rem">
+      <div class="card-title" style="margin-bottom:0">All Menu Items</div>
+      <a href="/admin/coffee/menuitem/add/" class="btn btn-primary btn-sm">
+        <i class="fa fa-plus"></i> Add via Django Admin
+      </a>
+    </div>
+
+    {% for item in items %}
+    <div class="item-row">
+      <div class="item-emoji-sm">☕</div>
+      <div class="item-details">
+        <div class="name">{{ item.name }}</div>
+        <div class="cat">{{ item.category.name }} · ~{{ item.preparation_time_min }}min</div>
+        {% if item.description %}<div style="font-size:0.78rem;color:#aaa">{{ item.description|truncatechars:60 }}</div>{% endif %}
+      </div>
+      <div class="item-price-label">₹{{ item.price }}</div>
+      <div>
+        {% if item.is_featured %}<span class="badge badge-gold"><i class="fa fa-star"></i> Featured</span>{% endif %}
+      </div>
+      <div>
+        <form method="post" action="{% url 'update_order_status' 0 %}" style="display:inline">
+          {% csrf_token %}
+          <!-- Availability toggle via admin panel link -->
+          <a href="/admin/coffee/menuitem/{{ item.id }}/change/"
+             class="toggle-avail {% if item.is_available %}on{% else %}off{% endif %}">
+            {% if item.is_available %}✓ Available{% else %}✗ Unavailable{% endif %}
+          </a>
+        </form>
+      </div>
+      <a href="/admin/coffee/menuitem/{{ item.id }}/change/" class="btn btn-sm btn-outline">
+        <i class="fa fa-edit"></i> Edit
+      </a>
+    </div>
+    {% empty %}
+    <div style="text-align:center;padding:3rem;color:#7a5c3a">
+      <div style="font-size:3rem">📋</div>
+      <p>No menu items yet. Add items via Django Admin.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Quick links to Django Admin -->
+  <div class="card" style="margin-top:1rem">
+    <div class="card-title">Django Admin Panels</div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap">
+      <a href="/admin/coffee/menuitem/" class="btn btn-dark btn-sm"><i class="fa fa-coffee"></i> Manage Items</a>
+      <a href="/admin/coffee/category/" class="btn btn-dark btn-sm"><i class="fa fa-list"></i> Manage Categories</a>
+      <a href="/admin/coffee/order/" class="btn btn-dark btn-sm"><i class="fa fa-receipt"></i> All Orders</a>
+      <a href="/admin/coffee/user/" class="btn btn-dark btn-sm"><i class="fa fa-users"></i> Users</a>
+      <a href="/admin/coffee/shoptable/" class="btn btn-dark btn-sm"><i class="fa fa-chair"></i> Tables</a>
+      <a href="/admin/coffee/reservation/" class="btn btn-dark btn-sm"><i class="fa fa-calendar"></i> Reservations</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
