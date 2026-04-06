@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # BrewMate — Coffee Shop Management System
 
 **Full-stack Django application with SQL database, custom security, REST API, and cloud-ready architecture.**
@@ -260,3 +261,6 @@ And install: `pip install psycopg2-binary`
 - Query optimization with select_related() and prefetch_related()
 - Whitenoise for static file serving (no separate static server needed)
 - Gunicorn with 4 workers in production
+=======
+# brewmate
+>>>>>>> ccfe3a63e63f00b83d6c1cea6df6caf2a49a504d
